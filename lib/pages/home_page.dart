@@ -47,11 +47,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   }
 
+  saveLink(Metadata md)async{
+    var sl = SavedLinks(link_title: md.title, link_string: md.url, archived: false, data_added: DateTime.now());
+    var ff = sl.toJson();
+    await supabase
+        .from('saved_links')
+        .insert(ff);
+  }
+
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this);
+    getLinks();
     _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream()
+
         .listen((List<SharedFile> value) {
       setState(() {
        // list = value;
@@ -62,13 +72,8 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       print("getIntentDataStream error: $err");
     });
     
-    saveLink(Metadata md)async{
-      var sl = SavedLinks(link_title: md.title, link_string: md.url, archived: false, data_added: DateTime.now());
-      var ff = sl.toJson();
-      await supabase
-          .from('saved_links')
-          .insert(ff);
-    }
+
+
 
     // For sharing images coming from outside the app while the app is closed
     FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) async{
@@ -116,6 +121,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       }
       });
 
+  }
+
+  getLinks()async{
+    final data = await supabase.from('saved_links').select();
   }
 
   @override

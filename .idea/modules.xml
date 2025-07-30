@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/pan_pocket.iml" filepath="$PROJECT_DIR$/pan_pocket.iml" />
+      <module fileurl="file://$PROJECT_DIR$/android/pan_pocket_android.iml" filepath="$PROJECT_DIR$/android/pan_pocket_android.iml" />
     </modules>
   </component>
 </project>
