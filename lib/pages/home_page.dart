@@ -4,10 +4,12 @@ import 'package:any_link_preview/any_link_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
 import 'package:flutter_sharing_intent/model/sharing_file.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get_it/get_it.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
-import 'package:pan_pocket/main.dart';
+import 'package:pan_pocket/controller/home_controller.dart';
 import 'package:pan_pocket/models/links.dart';
-import 'package:pan_pocket/models/saved_links.dart';
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -19,8 +21,10 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateMixin {
   late StreamSubscription _intentDataStreamSubscription;
   late AnimationController _controller;
+  var controller = GetIt.instance<HomeController>();
 
   List<Links> linksList = [];
+  late Future<List<Links>> futureLinksList;
   late Future<Metadata?> futureLink;
 
   getMetadata(String link){
@@ -48,18 +52,21 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   saveLink(Metadata md)async{
-    var sl = SavedLinks(link_title: md.title, link_string: md.url, archived: false, data_added: DateTime.now());
-    var ff = sl.toJson();
-    await supabase
-        .from('saved_links')
-        .insert(ff);
+    await controller.saveLink(md);
+    setState(() {
+      Navigator.of(context).pop();
+    });
+  }
+
+  deleteLink(int id)async{
+      await controller.deleteLink(id);
   }
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this);
-    getLinks();
+    futureLinksList = controller.onInit();
     _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream()
 
         .listen((List<SharedFile> value) {
@@ -123,9 +130,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
   }
 
-  getLinks()async{
-    final data = await supabase.from('saved_links').select();
-  }
+
 
   @override
   void dispose() {
@@ -148,12 +153,48 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       body: RefreshIndicator(
           onRefresh: onRefresh,
           child: SingleChildScrollView(
-            child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: linksList.length,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (BuildContext context, int index){
-                  return Text(linksList[index].Title!);
+            child: FutureBuilder(
+              future:futureLinksList,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(
+                        child: Text('Offline')
+                    );
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  linksList = snapshot.data!;
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: linksList.length,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (BuildContext context, int index) {
+                        return Slidable(
+                          key: const ValueKey(0),
+                          startActionPane: ActionPane(
+                            // A motion is a widget used to control how the pane animates.
+                            motion: const ScrollMotion(),
+
+                            // A pane can dismiss the Slidable.
+                            dismissible: DismissiblePane(onDismissed: () {}),
+
+                            // All actions are defined in the children parameter.
+                            children: [
+                              // A SlidableAction can have an icon and/or a label.
+                              SlidableAction(
+                                onPressed: (BuildContext context) {
+                                  deleteLink(linksList[index].LinkId!);
+                                },
+                                backgroundColor: const Color(0xFFFE4A49),
+                                foregroundColor: Colors.white,
+                                icon: Icons.delete,
+                                label: 'Delete',
+                              ),
+                            ],
+                          ),
+                          child: Text(linksList[index].Title!),);
+                      });
                 })
           )),
     );

@@ -149,6 +149,13 @@
             </list>
           </value>
         </entry>
+        <entry key="flutter_slidable">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_slidable-4.0.0/lib" />
+            </list>
+          </value>
+        </entry>
         <entry key="flutter_svg">
           <value>
             <list>
@@ -174,6 +181,13 @@
           <value>
             <list>
               <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/functions_client-2.4.3/lib" />
+            </list>
+          </value>
+        </entry>
+        <entry key="get_it">
+          <value>
+            <list>
+              <option value="$USER_HOME$/.pub-cache/hosted/pub.dev/get_it-7.7.0/lib" />
             </list>
           </value>
         </entry>
@@ -704,8 +718,10 @@
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/file-7.0.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_lints-5.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_sharing_intent-1.1.1/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_slidable-4.0.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/flutter_svg-2.2.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/functions_client-2.4.3/lib" />
+      <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/get_it-7.7.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/google_fonts-6.2.1/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/gotrue-2.13.0/lib" />
       <root url="file://$USER_HOME$/.pub-cache/hosted/pub.dev/gtk-2.1.0/lib" />
