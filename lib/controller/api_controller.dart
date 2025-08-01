@@ -3,7 +3,9 @@ import '../main.dart';
 class ApiController{
 
   getLinks()async{
-    return await supabase.from('saved_links').select();
+    return await supabase.from('saved_links')
+        .select()
+        .eq('archived',false);
   }
 
   saveLink(Map<String, dynamic> slJson)async{

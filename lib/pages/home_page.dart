@@ -9,7 +9,7 @@ import 'package:get_it/get_it.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:pan_pocket/controller/home_controller.dart';
 import 'package:pan_pocket/models/links.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -55,6 +55,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
     await controller.saveLink(md);
     setState(() {
       Navigator.of(context).pop();
+      futureLinksList = controller.onInit();
     });
   }
 
@@ -140,7 +141,14 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
   }
 
   Future<void> onRefresh()async{
+    futureLinksList = controller.onInit();
+  }
 
+  launchLink(String url)async{
+    var uri = Uri.parse(url);
+    if (!await launchUrl(uri)) {
+      throw Exception('Could not launch $uri');
+    }
   }
 
   @override
@@ -152,51 +160,56 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       ),
       body: RefreshIndicator(
           onRefresh: onRefresh,
-          child: SingleChildScrollView(
-            child: FutureBuilder(
-              future:futureLinksList,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                        child: Text('Offline')
-                    );
-                  }
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  linksList = snapshot.data!;
-                  return ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: linksList.length,
-                      physics: const BouncingScrollPhysics(),
-                      itemBuilder: (BuildContext context, int index) {
-                        return Slidable(
-                          key: const ValueKey(0),
-                          startActionPane: ActionPane(
-                            // A motion is a widget used to control how the pane animates.
-                            motion: const ScrollMotion(),
+          child: FutureBuilder(
+            future:futureLinksList,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                      child: Text('Offline')
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                linksList = snapshot.data!;
+                return ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: linksList.length,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemBuilder: (BuildContext context, int index) {
+                      return Slidable(
+                        key: Key(linksList[index].LinkId.toString()),
+                        startActionPane: ActionPane(
+                          // A motion is a widget used to control how the pane animates.
+                          motion: const ScrollMotion(),
 
-                            // A pane can dismiss the Slidable.
-                            dismissible: DismissiblePane(onDismissed: () {}),
+                          // A pane can dismiss the Slidable.
+                          dismissible: DismissiblePane(onDismissed: () {
+                         //   deleteLink(linksList[index].LinkId!);
+                            setState(() {
+                              linksList.remove(linksList[index]);
+                            });
+                          }),
 
-                            // All actions are defined in the children parameter.
-                            children: [
-                              // A SlidableAction can have an icon and/or a label.
-                              SlidableAction(
-                                onPressed: (BuildContext context) {
-                                  deleteLink(linksList[index].LinkId!);
-                                },
-                                backgroundColor: const Color(0xFFFE4A49),
-                                foregroundColor: Colors.white,
-                                icon: Icons.delete,
-                                label: 'Delete',
-                              ),
-                            ],
-                          ),
-                          child: Text(linksList[index].Title!),);
-                      });
-                })
-          )),
+                          // All actions are defined in the children parameter.
+                          children: [
+                            // A SlidableAction can have an icon and/or a label.
+                            SlidableAction(
+                              onPressed: (BuildContext context) {
+                                deleteLink(linksList[index].LinkId!);
+                              },
+                              backgroundColor: const Color(0xFFFE4A49),
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete,
+                             // label: 'Delete',
+                            ),
+                          ],
+                        ),
+                        child: InkWell(
+                            onTap: (){launchLink(linksList[index].Link!);},
+                            child: Text(linksList[index].Title!)),);
+                    });
+              })),
     );
   }
 }
