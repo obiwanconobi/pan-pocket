@@ -63,6 +63,10 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       await controller.deleteLink(id);
   }
 
+  linkAction()async{
+
+  }
+
   @override
   void initState() {
     super.initState();
@@ -90,8 +94,6 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
         getMetadata(value.first.value!);
         setState(() {
-
-          addLinkToList(value.first.value!);
           showMaterialModalBottomSheet(
               enableDrag: true,
               context: context,
@@ -113,8 +115,35 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             child: Column(
                               children: [
                                 TextButton(onPressed:() => {saveLink(md)}, child: Text("Save"),),
-                                Text(md!.title!),
-                                Text(md!.desc!),
+                                AnyLinkPreview(
+                                  link: md.url!,
+                                  displayDirection: UIDirection.uiDirectionHorizontal,
+                                  showMultimedia: false,
+                                  bodyMaxLines: 5,
+                                  bodyTextOverflow: TextOverflow.ellipsis,
+                                  titleStyle: TextStyle(
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                  ),
+                                  bodyStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                                  errorBody: 'Show my custom error body',
+                                  errorTitle: 'Show my custom error title',
+                                  errorWidget: Container(
+                                    color: Colors.grey[300],
+                                    child: Text('Oops!'),
+                                  ),
+                                  errorImage: "https://google.com/",
+                                  cache: Duration(days: 7),
+                                  backgroundColor: Colors.grey[300],
+                                  borderRadius: 12,
+                                  removeElevation: false,
+                                  userAgent: 'WhatsApp/2.21.12.21 A',
+                                  boxShadow: [BoxShadow(blurRadius: 3, color: Colors.grey)],
+                                  onTap: () {}, // This disables tap event
+                                )
+                              //  Text(md!.title!),
+                               // Text(md!.desc ?? ""),
 
                               ],
                             ),
@@ -185,7 +214,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
 
                           // A pane can dismiss the Slidable.
                           dismissible: DismissiblePane(onDismissed: () {
-                         //   deleteLink(linksList[index].LinkId!);
+                            deleteLink(linksList[index].LinkId!);
                             setState(() {
                               linksList.remove(linksList[index]);
                             });
@@ -205,9 +234,33 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
                             ),
                           ],
                         ),
-                        child: InkWell(
-                            onTap: (){launchLink(linksList[index].Link!);},
-                            child: Text(linksList[index].Title!)),);
+                        child: AnyLinkPreview(
+                          link: linksList[index].Link!,
+                          displayDirection: UIDirection.uiDirectionHorizontal,
+                          showMultimedia: false,
+                          bodyMaxLines: 5,
+                          bodyTextOverflow: TextOverflow.ellipsis,
+                          titleStyle: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          bodyStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                          errorBody: 'Show my custom error body',
+                          errorTitle: 'Show my custom error title',
+                          errorWidget: Container(
+                            color: Colors.grey[300],
+                            child: Text('Oops!'),
+                          ),
+                          errorImage: "https://google.com/",
+                          cache: Duration(days: 7),
+                          backgroundColor: Colors.grey[300],
+                          borderRadius: 12,
+                          removeElevation: false,
+                          userAgent: 'WhatsApp/2.21.12.21 A',
+                          boxShadow: [BoxShadow(blurRadius: 3, color: Colors.grey)],
+                          onTap: () {launchLink(linksList[index].Link!);}, // This disables tap event
+                        ),);
                     });
               })),
     );
