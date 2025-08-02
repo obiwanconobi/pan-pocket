@@ -3,11 +3,14 @@ class Links {
   final String? Title;
   final String? Link;
   final String? Info;
-
+  final DateTime? DateAdded;
+  final bool? Archived;
   Links({
     this.LinkId,
     this.Title,
     this.Link,
-    this.Info
+    this.Info,
+    this.DateAdded,
+    this.Archived
   });
 }

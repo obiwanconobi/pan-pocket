@@ -8,13 +8,14 @@ import '../models/saved_links.dart';
 class HomeController{
 
   var apiController = GetIt.instance<ApiController>();
-  Future<List<Links>> onInit()async {
-    var data = await apiController.getLinks();
+  Future<List<Links>> onInit(bool archived)async {
+    var data = await apiController.getLinks(archived);
     List<Links> linksList = [];
     for(var d in data){
-      var link = Links(LinkId: d['id'],Title: d['link_title'], Link: d["link_string"]);
+      var link = Links(LinkId: d['id'],Title: d['link_title'], Link: d["link_string"], DateAdded: DateTime.parse(d["date_added"]), Archived: d["archived"]);
       linksList.add(link);
     }
+    linksList.sort((a,b) => a.DateAdded!.compareTo(b.DateAdded!));
     return linksList;
   }
 
@@ -27,5 +28,9 @@ class HomeController{
 
   deleteLink(int LinkId)async{
     await apiController.deleteLink(LinkId);
+  }
+
+  archiveLink(int LinkId)async{
+    await apiController.archiveLink(LinkId);
   }
 }

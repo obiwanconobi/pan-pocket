@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> {
               fontSize: 20,
               fontWeight: FontWeight.w600), // Text color for dark theme
           bodyMedium: TextStyle(color: Colors.black, backgroundColor: Colors.transparent, fontSize: 18),
-          bodySmall: TextStyle(color: Colors.black, fontSize: 16),
+          bodySmall: TextStyle(color: Colors.black, fontSize: 13),
           labelSmall: TextStyle(color: Colors.black, fontSize: 11)),
       textButtonTheme:  const TextButtonThemeData(
           style: ButtonStyle(
@@ -139,7 +139,7 @@ class _MyAppState extends State<MyApp> {
               fontSize: 20,
               fontWeight: FontWeight.w600), // Text color for dark theme
           bodyMedium: TextStyle(color: Colors.white, fontSize: 18),
-          bodySmall: TextStyle(color: Colors.white, fontSize: 16),
+          bodySmall: TextStyle(color: Colors.white, fontSize: 13),
           labelSmall: TextStyle(color: Colors.white, fontSize: 11)),
       iconTheme: const IconThemeData(color: Colors.blueGrey),
       listTileTheme: const ListTileThemeData(
@@ -179,7 +179,7 @@ class _MyAppState extends State<MyApp> {
             '/': (_) => const SplashPage(),
             '/login': (_) => const LoginPage(),
            // '/account': (_) => const AccountPage(),
-            '/home': (_) => const MyHomePage(),
+            '/home': (_) =>  MyHomePage(),
           },
         ),
       );

@@ -2,10 +2,11 @@ import '../main.dart';
 
 class ApiController{
 
-  getLinks()async{
+  getLinks(bool archived)async{
     return await supabase.from('saved_links')
         .select()
-        .eq('archived',false);
+        .eq('deleted', false)
+        .eq('archived',archived);
   }
 
   saveLink(Map<String, dynamic> slJson)async{
@@ -15,6 +16,12 @@ class ApiController{
   }
 
   deleteLink(int linkId)async{
+    await supabase.from('saved_links')
+        .update({'deleted': true})
+        .eq('id', linkId);
+  }
+
+  archiveLink(int linkId)async{
     await supabase.from('saved_links')
         .update({'archived': true})
         .eq('id', linkId);
