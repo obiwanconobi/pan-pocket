@@ -39,7 +39,9 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
   late Future<Metadata?> futureLink;
 
   getMetadata(String link){
-    futureLink = AnyLinkPreview.getMetadata(link: link, cache: const Duration(days: 2));
+    RegExp exp = new RegExp(r'(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+');
+    Iterable<RegExpMatch> matches = exp.allMatches(link);
+    futureLink = AnyLinkPreview.getMetadata(link: link.substring(matches.first.start, matches.first.end), cache: const Duration(days: 2));
   }
 
   ParseLink(String link)async{
@@ -95,6 +97,36 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
     });
 
   }
+
+  @override
+  void dispose() {
+    _intentDataStreamSubscription.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> onRefresh()async{
+    // linksList.clear();
+    setState(() {
+      futureLinksList = controller.onInit(archivedPara ?? false);
+    });
+  }
+
+  launchLink(String url)async{
+    var uri = Uri.parse(url);
+    if (!await launchUrl(uri)) {
+      throw Exception('Could not launch $uri');
+    }
+  }
+
+  restoreLink(Links link)async{
+   await controller.restoreLink(link.LinkId!);
+    setState(() {
+      linksList.remove(link);
+    });
+  }
+
+
 
 
   linkAction()async{
@@ -169,7 +201,7 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
                                       color: Colors.grey[300],
                                       child: Text('Oops!'),
                                     ),
-                                    errorImage: "https://google.com/",
+                                    errorImage: "https://hitzvatlzhtqvmliqlna.supabase.co/storage/v1/object/public/appfiles/ic_launcher.png",
                                     cache: Duration(days: getCacheValue()),
                                     backgroundColor: Colors.grey[300],
                                     borderRadius: 12,
@@ -197,29 +229,6 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
 
 
 
-  }
-
-
-
-  @override
-  void dispose() {
-    _intentDataStreamSubscription.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Future<void> onRefresh()async{
-    // linksList.clear();
-    setState(() {
-      futureLinksList = controller.onInit(archivedPara ?? false);
-    });
-  }
-
-  launchLink(String url)async{
-    var uri = Uri.parse(url);
-    if (!await launchUrl(uri)) {
-      throw Exception('Could not launch $uri');
-    }
   }
 
 
@@ -269,6 +278,26 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
                         ),
                       ],
                     ),
+                    endActionPane: linksList[index].Archived! ? ActionPane(
+                      // A motion is a widget used to control how the pane animates.
+                      motion: const ScrollMotion(),
+
+                      // All actions are defined in the children parameter.
+                      children: [
+                        // A SlidableAction can have an icon and/or a label.
+                        SlidableAction(
+                            flex: 2,
+                            borderRadius: BorderRadius.circular(2),
+                            onPressed: (BuildContext context) {
+                              restoreLink(linksList[index]);
+                            },
+                            backgroundColor: Colors.lightGreen,
+                            foregroundColor: Colors.black,
+                            icon: Icons.restore,
+                            label: 'Restore'
+                        )
+                      ],
+                    ) : null,
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: AnyLinkPreview(
@@ -285,7 +314,7 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
                           color: Colors.grey[300],
                           child: Text('Oops!'),
                         ),
-                        errorImage: "https://google.com/",
+                        errorImage: "https://hitzvatlzhtqvmliqlna.supabase.co/storage/v1/object/public/appfiles/ic_launcher.png",
                         cache: Duration(days: getCacheValue()),
                         backgroundColor: Theme.of(context).canvasColor,
                         borderRadius: 12,

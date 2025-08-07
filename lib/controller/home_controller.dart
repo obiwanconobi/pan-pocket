@@ -33,4 +33,8 @@ class HomeController{
   archiveLink(int LinkId)async{
     await apiController.archiveLink(LinkId);
   }
+
+  restoreLink(int LinkId)async{
+    await apiController.restoreLink(LinkId);
+  }
 }

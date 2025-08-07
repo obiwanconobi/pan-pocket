@@ -46,6 +46,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   persistent_bottom_nav_bar_v2: ^6.1.0
   numberpicker: ^2.1.2
+  rss_dart: ^1.0.13
 
 dev_dependencies:
   flutter_test:

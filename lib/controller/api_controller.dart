@@ -27,4 +27,10 @@ class ApiController{
         .eq('id', linkId);
   }
 
+  restoreLink(int linkId)async{
+    await supabase.from('saved_links')
+        .update({'archived': false})
+        .eq('id', linkId);
+  }
+
 }

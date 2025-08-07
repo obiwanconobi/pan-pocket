@@ -143,7 +143,13 @@ class _MyHomePageState extends State<HomeLinksPage> with SingleTickerProviderSta
             centerTitle: true,
             title:Text("Pan Pocket")
         ),
-        floatingActionButton: IconButton(onPressed: (){ _displayTextInputDialog(context); }, icon: Icon(Icons.add),),
+        floatingActionButton: Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle, // circular shape
+              color: Theme.of(context).focusColor
+              ),
+
+            child: IconButton(onPressed: (){ _displayTextInputDialog(context); }, icon: Icon(Icons.add, color: Colors.white,),)),
         body: RefreshIndicator(
             onRefresh: onRefresh,
             child: LinksPage(archived: false, key: _linksPageKey,))

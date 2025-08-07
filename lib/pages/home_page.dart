@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:pan_pocket/pages/rss_reader.dart';
 import 'package:pan_pocket/pages/settings_page.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent_bottom_nav_bar_v2.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:get_it/get_it.dart';
 import 'package:pan_pocket/controller/home_controller.dart';
 import 'package:pan_pocket/pages/archived_page.dart';
 import 'package:pan_pocket/pages/links_page.dart';
+import 'package:rss_dart/domain/rss_feed.dart';
 import 'package:sizer/sizer.dart';
 
 import 'home_links_page.dart';
@@ -73,6 +75,13 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       icon: const Icon(Icons.auto_delete_rounded),
       title: "Archived",
       ),
+      ),
+      PersistentTabConfig(
+        screen: const RssReader(),
+        item: ItemConfig(
+          icon: const Icon(Icons.rss_feed),
+          title: "RSS",
+        ),
       ),
       PersistentTabConfig(
             screen: const SettingsPage(),
