@@ -71,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       PersistentTabConfig(
       screen: ArchivedPage(),
       item: ItemConfig(
-      activeForegroundColor: Colors.blue,
+      activeForegroundColor: Colors.red,
       icon: const Icon(Icons.auto_delete_rounded),
       title: "Archived",
       ),
@@ -79,6 +79,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       PersistentTabConfig(
         screen: const RssReader(),
         item: ItemConfig(
+          activeForegroundColor: Colors.blue,
           icon: const Icon(Icons.rss_feed),
           title: "RSS",
         ),
@@ -86,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> with SingleTickerProviderStateM
       PersistentTabConfig(
             screen: const SettingsPage(),
             item: ItemConfig(
+              activeForegroundColor: Colors.deepOrange,
               icon: const Icon(Icons.settings),
               title: "Settings",
             ),

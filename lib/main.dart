@@ -93,12 +93,12 @@ class _MyAppState extends State<MyApp> {
           style: ButtonStyle(
              // backgroundColor: WidgetStatePropertyAll<Color>(Color(0xFF884DFF)),
               textStyle:
-              WidgetStatePropertyAll<TextStyle>(TextStyle(fontSize: 17, color: Colors.white)),
+              WidgetStatePropertyAll<TextStyle>(TextStyle(fontSize: 17, color: Colors.black)),
               shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   )),
-              foregroundColor: WidgetStatePropertyAll<Color>(Colors.white)))
+              foregroundColor: WidgetStatePropertyAll<Color>(Colors.black)))
     // Add other dark theme properties here
   );
 

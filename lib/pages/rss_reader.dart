@@ -77,8 +77,13 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
               //child: CircularProgressIndicator(),
             );
           } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
+            return Column(
+              children: [
+                Center(
+                  child: Text('Error: No URL Specified'),
+                ),
+                TextButton(onPressed: refresh, child: Text('Refresh'))
+              ],
             );
           } else if (!snapshot.hasData) {
             return Center(
