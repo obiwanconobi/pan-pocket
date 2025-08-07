@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'dart:io' show Platform;
 import 'package:any_link_preview/any_link_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get_it/get_it.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:pan_pocket/controller/home_controller.dart';
+import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
 import 'package:pan_pocket/models/links.dart';
 import 'package:pan_pocket/widgets/icon_gradient_color.dart';
 import 'package:sizer/sizer.dart';
@@ -29,6 +31,7 @@ class LinksPage extends StatefulWidget {
 class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMixin {
   late StreamSubscription _intentDataStreamSubscription;
   late AnimationController _controller;
+  bool clearCache = false;
   var controller = GetIt.instance<HomeController>();
 
   List<Links> linksList = [];
@@ -76,6 +79,9 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
 
   }
 
+  getCacheValue(){
+    return SharedPreferencesHelper.getInt('cacheValue') ?? 3;
+  }
 
   removeLink(Links link){
     if(link.Archived!){
@@ -100,91 +106,96 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
     super.initState();
     _controller = AnimationController(vsync: this);
     futureLinksList = controller.onInit(archivedPara!);
-    _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream()
 
-        .listen((List<SharedFile> value) {
-      setState(() {
-        // list = value;
-        addLinkToList(value.first.value!);
+    if(Platform.isAndroid){
+      _intentDataStreamSubscription = FlutterSharingIntent.instance.getMediaStream()
+
+          .listen((List<SharedFile> value) {
+        setState(() {
+          // list = value;
+          addLinkToList(value.first.value!);
+        });
+        print("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
+      }, onError: (err) {
+        print("getIntentDataStream error: $err");
       });
-      print("Shared: getMediaStream ${value.map((f) => f.value).join(",")}");
-    }, onError: (err) {
-      print("getIntentDataStream error: $err");
-    });
-
-
-
+    }
 
     // For sharing images coming from outside the app while the app is closed
-    FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) async{
-      print("Shared: getInitialMedia ${value.map((f) => f.value).join(",")}");
-      if(value.isNotEmpty){
 
-        getMetadata(value.first.value!);
-        setState(() {
-          showMaterialModalBottomSheet(
-              enableDrag: true,
-              context: context,
-              builder: (context) =>
-                  FutureBuilder(
-                      future: futureLink,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(
-                              child: Text('Offline')
-                          );}
-                        if (!snapshot.hasData) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        var md = snapshot.data!;
-                        return SingleChildScrollView(
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 50, 0, 50),
-                            child: Column(
-                              children: [
-                                TextButton(onPressed:() => {saveLink(md)}, child: Text("Save"),),
-                                AnyLinkPreview(
-                                  link: md.url!,
-                                  displayDirection: UIDirection.uiDirectionHorizontal,
-                                  showMultimedia: true,
-                                  bodyMaxLines: 5,
-                                  bodyTextOverflow: TextOverflow.ellipsis,
-                                  titleStyle: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                  ),
-                                  bodyStyle: TextStyle(color: Colors.grey, fontSize: 12),
-                                  errorBody: 'Show my custom error body',
-                                  errorTitle: 'Show my custom error title',
-                                  errorWidget: Container(
-                                    color: Colors.grey[300],
-                                    child: Text('Oops!'),
-                                  ),
-                                  errorImage: "https://google.com/",
-                                  cache: Duration(days: 7),
-                                  backgroundColor: Colors.grey[300],
-                                  borderRadius: 12,
-                                  removeElevation: false,
-                                  userAgent: 'WhatsApp/2.21.12.21 A',
-                                  boxShadow: [BoxShadow(blurRadius: 3, color: Colors.grey)],
-                                  onTap: () {}, // This disables tap event
-                                )
-                                //  Text(md!.title!),
-                                // Text(md!.desc ?? ""),
+    if(Platform.isAndroid){
+      FlutterSharingIntent.instance.getInitialSharing().then((List<SharedFile> value) async{
+        print("Shared: getInitialMedia ${value.map((f) => f.value).join(",")}");
+        if(value.isNotEmpty){
 
-                              ],
+          getMetadata(value.first.value!);
+          setState(() {
+            showMaterialModalBottomSheet(
+                enableDrag: true,
+                context: context,
+                builder: (context) =>
+                    FutureBuilder(
+                        future: futureLink,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                                child: Text('Offline')
+                            );}
+                          if (!snapshot.hasData) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          var md = snapshot.data!;
+                          return SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 50, 0, 50),
+                              child: Column(
+                                children: [
+                                  TextButton(onPressed:() => {saveLink(md)}, child: Text("Save"),),
+                                  AnyLinkPreview(
+                                    link: md.url!,
+                                    displayDirection: UIDirection.uiDirectionHorizontal,
+                                    showMultimedia: true,
+                                    bodyMaxLines: 5,
+                                    bodyTextOverflow: TextOverflow.ellipsis,
+                                    titleStyle: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                    ),
+                                    bodyStyle: TextStyle(color: Colors.grey, fontSize: 12),
+                                    errorBody: 'Show my custom error body',
+                                    errorTitle: 'Show my custom error title',
+                                    errorWidget: Container(
+                                      color: Colors.grey[300],
+                                      child: Text('Oops!'),
+                                    ),
+                                    errorImage: "https://google.com/",
+                                    cache: Duration(days: getCacheValue()),
+                                    backgroundColor: Colors.grey[300],
+                                    borderRadius: 12,
+                                    removeElevation: false,
+                                    userAgent: 'WhatsApp/2.21.12.21 A',
+                                    boxShadow: [BoxShadow(blurRadius: 3, color: Colors.grey)],
+                                    onTap: () {}, // This disables tap event
+                                  )
+                                  //  Text(md!.title!),
+                                  // Text(md!.desc ?? ""),
+
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                  )
-          );
+                          );
+                        }
+                    )
+            );
 
 
-        });
-      }
-    });
+          });
+        }
+      });
+    }
+
+
 
   }
 
@@ -275,7 +286,7 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
                           child: Text('Oops!'),
                         ),
                         errorImage: "https://google.com/",
-                        cache: Duration(days: 7),
+                        cache: Duration(days: getCacheValue()),
                         backgroundColor: Theme.of(context).canvasColor,
                         borderRadius: 12,
                         removeElevation: false,

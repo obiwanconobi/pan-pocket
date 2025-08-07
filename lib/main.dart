@@ -11,6 +11,7 @@ import 'package:pan_pocket/pages/splash_page.dart';
 import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'controller/api_controller.dart';
+import 'helpers/shared_preferences_helper.dart';
 import 'models/links.dart';
 
 Future<void> main() async{
@@ -19,7 +20,7 @@ Future<void> main() async{
                                 anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpdHp2YXRsemh0cXZtbGlxbG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDM3ODAsImV4cCI6MjA2OTE3OTc4MH0.q_dVD4w4oa8xZM99OwmMSV73a6WEBGKE9188m5Bt0n4',  );
   GetIt.I.registerSingleton<ApiController>(ApiController());
   GetIt.I.registerSingleton<HomeController>(HomeController());
-
+  await SharedPreferencesHelper.init();
   runApp(const MyApp());
 }
 
