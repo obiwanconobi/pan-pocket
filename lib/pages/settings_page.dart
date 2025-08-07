@@ -17,10 +17,12 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   ScreenHelper screenHelper = ScreenHelper();
+  TextEditingController rssUrlController = TextEditingController();
   @override
   void initState(){
     super.initState();
     _controller = AnimationController(vsync: this);
+    rssUrlController.text = SharedPreferencesHelper.getString("rssUrl") ?? "Set Url";
     getPreferences();
   }
 
@@ -47,6 +49,10 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     return SharedPreferencesHelper.getInt('cacheValue') ?? 3;
   }
 
+
+  saveUrl(){
+    SharedPreferencesHelper.setString("rssUrl", rssUrlController.text);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +95,8 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                 )
               ],
             ),
+            TextField(controller: rssUrlController,),
+            TextButton(child: Text('Save'), onPressed: saveUrl,)
           ],
         ),
       ),

@@ -91,7 +91,7 @@ class _MyAppState extends State<MyApp> {
           labelSmall: TextStyle(color: Colors.black, fontSize: 11)),
       textButtonTheme:  const TextButtonThemeData(
           style: ButtonStyle(
-              backgroundColor: WidgetStatePropertyAll<Color>(Color(0xFF884DFF)),
+             // backgroundColor: WidgetStatePropertyAll<Color>(Color(0xFF884DFF)),
               textStyle:
               WidgetStatePropertyAll<TextStyle>(TextStyle(fontSize: 17, color: Colors.white)),
               shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
@@ -149,7 +149,7 @@ class _MyAppState extends State<MyApp> {
       ),
       textButtonTheme: const TextButtonThemeData(
           style: ButtonStyle(
-              backgroundColor: WidgetStatePropertyAll<Color>(Color(0xFF884DFF)),
+           //   backgroundColor: WidgetStatePropertyAll<Color>(Color(0xFF884DFF)),
               textStyle:
               WidgetStatePropertyAll<TextStyle>(TextStyle(fontSize: 20)),
               shape: WidgetStatePropertyAll<RoundedRectangleBorder>(
