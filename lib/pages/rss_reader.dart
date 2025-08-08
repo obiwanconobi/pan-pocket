@@ -39,6 +39,14 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     super.dispose();
   }
 
+  extractText(String description){
+    RegExp exp = new RegExp(r'<img[^>]*>');
+
+    var ff = description.replaceAll(exp, "");
+    return ff;
+  }
+
+
   getImageLink(RssItem item){
 
     if(item.media!.contents.length > 0){
@@ -52,6 +60,13 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
       var fff = Uri.tryParse(item.media!.thumbnails.first.url!);
       if(fff != null){
         return item.media!.thumbnails.first.url;
+      }
+    }
+    if(item.content == null) return "";
+    if(item.content!.images.length > 0){
+      var ffff = Uri.tryParse(item.content!.images.first.toString());
+      if(ffff != null){
+        return item.content!.images.first.toString();
       }
     }
     return "";
@@ -105,7 +120,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
                         Image.network(getImageLink(rssItems[index])),
                         ListTile(
                           title: Text(rssItems[index].title!),
-                          subtitle: Text(rssItems[index].description!.replaceAll("\n", "").replaceAll("                        ", "")),
+                          subtitle: Text(extractText(rssItems[index].description!.replaceAll("\n", "").replaceAll("                        ", ""))),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(7.0),
