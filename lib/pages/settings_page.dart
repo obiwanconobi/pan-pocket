@@ -1,10 +1,8 @@
 import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:pan_pocket/helpers/screen_helper.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sizer/sizer.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -18,6 +16,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   late AnimationController _controller;
   ScreenHelper screenHelper = ScreenHelper();
   TextEditingController rssUrlController = TextEditingController();
+  List<String> urlList = SharedPreferencesHelper.getStringList("urlList") ?? [];
   @override
   void initState(){
     super.initState();
@@ -51,7 +50,19 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
 
 
   saveUrl(){
-    SharedPreferencesHelper.setString("rssUrl", rssUrlController.text);
+  //  SharedPreferencesHelper.setString("rssUrl", rssUrlController.text);
+    setState(() {
+      urlList.add(rssUrlController.text);
+    });
+
+    SharedPreferencesHelper.setStringList('urlList', urlList);
+  }
+
+  removeUrlFromList(String url){
+    setState(() {
+      urlList.remove(url);
+    });
+    SharedPreferencesHelper.setStringList('urlList', urlList);
   }
 
   @override
@@ -96,7 +107,25 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
               ],
             ),
             TextField(controller: rssUrlController,),
-            TextButton(child: Text('Save'), onPressed: saveUrl,)
+            TextButton(child: Text('Save'), onPressed: saveUrl,),
+            Container(
+              height: 30.h,
+              child: ListView.builder(
+                  itemCount: urlList.length,
+                  itemBuilder: (context, index){
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SizedBox(
+                     width: 30.w,
+                        child: Text(urlList[index], overflow: TextOverflow.ellipsis,maxLines: 1,)),
+                    IconButton(onPressed:()=>{removeUrlFromList(urlList[index])}, icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.secondary, size:30),),
+
+
+                  ],
+                );
+              }),
+            )
           ],
         ),
       ),

@@ -1,9 +1,13 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
+import 'package:pan_pocket/pages/rss_article_page.dart';
 import 'package:rss_dart/dart_rss.dart';
 import 'package:http/http.dart' as http;
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 class RssReader extends StatefulWidget {
   const RssReader({super.key});
 
@@ -13,6 +17,7 @@ class RssReader extends StatefulWidget {
 
 class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  List<String> urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
   late Future<List<RssItem>> futureRssItems;
   List<RssItem> rssItems = [];
 
@@ -23,10 +28,61 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     _controller = AnimationController(vsync: this);
   }
 
+
+  parseDateTime(String myDate){
+        String month = "";
+        String hour = myDate.substring(17, 25); //Get the hour section [22:00:00]
+
+        String day = myDate.substring(5, 7); //Get the day section [28]
+
+        if(myDate.substring(8, 11) == 'Jan'){ //Converting the month Section
+          month = '01';
+        } else if(myDate.substring(8, 11) == 'Feb'){
+          month = '02';
+        } else if(myDate.substring(8, 11) == 'Mar'){
+          month = '03';
+        } else if(myDate.substring(8, 11) == 'Apr'){
+          month = '04';
+        } else if(myDate.substring(8, 11) == 'May'){
+          month = '05';
+        } else if(myDate.substring(8, 11) == 'Jun'){
+          month = '06';
+        } else if(myDate.substring(8, 11) == 'Jul'){
+          month = '07';
+        } else if(myDate.substring(8, 11) == 'Aug'){
+          month = '08';
+        } else if(myDate.substring(8, 11) == 'Sep'){
+          month = '09';
+        } else if(myDate.substring(8, 11) == 'Oct'){
+          month = '10';
+        } else if(myDate.substring(8, 11) == 'Nov'){
+          month = '11';
+        } else if(myDate.substring(8, 11) == 'Dec'){
+          month = '12';
+        }
+
+        String year = myDate.substring(12, 16); //Get the year section
+
+        String date = year + '-' + month + '-' + day + ' ' + hour; //Combine them
+
+        DateTime parsedDate = DateTime.parse(date); //parsed it.
+        return parsedDate;
+  }
+
   Future<List<RssItem>> getFeedAsync()async{
-    var url = SharedPreferencesHelper.getString("rssUrl") ?? "";
-    var xmlFeed = await http.get(Uri.parse(url));
-    return new RssFeed.parse(xmlFeed.body).items;
+   // var url = SharedPreferencesHelper.getString("rssUrl") ?? "";
+    List<RssItem> list = [];
+    for(var url in urls){
+      var xmlFeed = await http.get(Uri.parse(url));
+      list.addAll(RssFeed.parse(xmlFeed.body).items);
+    }
+
+    var fdfd = parseDateTime(list[0].pubDate!);
+   // var ddd = DateTime.parse(list[0].pubDate!);
+
+    list.sort((a,b) => parseDateTime(b.pubDate!).compareTo(parseDateTime(a.pubDate!)));
+   // list.sort((a,b) => a.pubDate!.compareTo(b.pubDate!));
+    return list;
   }
 
   getFeed()async{
@@ -39,11 +95,38 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     super.dispose();
   }
 
-  extractText(String description){
+  extractText(String description, String title){
     RegExp exp = new RegExp(r'<img[^>]*>');
-
     var ff = description.replaceAll(exp, "");
-    return ff;
+    ff = Bidi.stripHtmlIfNeeded(ff);
+    if(ff.startsWith(" ")){
+      ff = ff.replaceRange(0, 1, "");
+    }
+    if(ff.startsWith(title)){
+      ff = ff.replaceRange(0, title.length, "");
+    }
+
+    int maxLength = 280;
+    if(description.length < 280){
+      maxLength = description.length;
+    }
+
+    return ff.substring(0, maxLength);
+  }
+
+  extractImage(String description){
+    RegExp exp = new RegExp(r'<img[^>]*>');
+    if(exp.hasMatch(description)){
+      var result = exp.firstMatch(description);
+
+      RegExp urlRegEx = new RegExp(r'src="([^"]+)"');
+      if(urlRegEx.hasMatch(result![0]!)){
+        var urls = urlRegEx.firstMatch(result![0]!);
+        var ree = urls![1];
+        return ree;
+      }
+    }
+   return "https://hitzvatlzhtqvmliqlna.supabase.co/storage/v1/object/public/appfiles/ic_launcher.png";
   }
 
 
@@ -62,13 +145,17 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
         return item.media!.thumbnails.first.url;
       }
     }
-    if(item.content == null) return "";
+    if(item.content == null){
+      return extractImage(item.description!);
+    }
     if(item.content!.images.length > 0){
       var ffff = Uri.tryParse(item.content!.images.first.toString());
       if(ffff != null){
         return item.content!.images.first.toString();
       }
     }
+
+
     return "";
   }
 
@@ -76,6 +163,14 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     setState(() {
       futureRssItems = getFeedAsync();
     });
+  }
+  
+  getHtmlText(RssItem item){
+    if(item.content != null){
+      return item.content!.value;
+    }
+
+    return item.description;
   }
 
   @override
@@ -119,8 +214,9 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
                       children: [
                         Image.network(getImageLink(rssItems[index])),
                         ListTile(
+
                           title: Text(rssItems[index].title!),
-                          subtitle: Text(extractText(rssItems[index].description!.replaceAll("\n", "").replaceAll("                        ", ""))),
+                          subtitle: Text(extractText(rssItems[index].description!.replaceAll("\n", "").replaceAll("                        ", ""), rssItems[index].title!)),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(7.0),
@@ -130,7 +226,11 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
                             TextButton(
                               child: const Text('View'),
                               onPressed: () {
-                                /* ... */
+                                Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText( rssItems[index]))),
+                                );
+
+
                               },
                             ),
                             SizedBox(width: 2.w,),

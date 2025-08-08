@@ -36,5 +36,13 @@ class SharedPreferencesHelper {
     return _sharedPreferences!.setBool(key, value);
   }
 
+  static Future<bool> setStringList(String key, List<String> value){
+    return _sharedPreferences!.setStringList(key, value);
+  }
+
+  static List<String>? getStringList(String key){
+    return _sharedPreferences!.getStringList(key);
+  }
+
 // Similarly, you can create methods for other data types.
 }
