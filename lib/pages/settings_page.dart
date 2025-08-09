@@ -110,6 +110,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
             TextButton(child: Text('Save'), onPressed: saveUrl,),
             Container(
               height: 30.h,
+              width: screenHelper.screenWidthMoreThanHeight(context) ? 50.w : 100.w,
               child: ListView.builder(
                   itemCount: urlList.length,
                   itemBuilder: (context, index){
@@ -117,7 +118,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     SizedBox(
-                     width: 30.w,
+                     width: 70.w,
                         child: Text(urlList[index], overflow: TextOverflow.ellipsis,maxLines: 1,)),
                     IconButton(onPressed:()=>{removeUrlFromList(urlList[index])}, icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.secondary, size:30),),
 

@@ -9,6 +9,7 @@ import 'package:pan_pocket/controller/home_controller.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
 import 'package:pan_pocket/pages/links_page.dart';
 import 'package:sizer/sizer.dart';
+import 'dart:io' show Platform;
 
 
 class HomeLinksPage extends StatefulWidget {
@@ -96,7 +97,7 @@ class _MyHomePageState extends State<HomeLinksPage> with SingleTickerProviderSta
                             TextButton(onPressed:() => {saveLink(md)}, child: Text("Save"),),
                             AnyLinkPreview(
                               link: md.url!,
-                              displayDirection: UIDirection.uiDirectionHorizontal,
+                              displayDirection: UIDirection.uiDirectionVertical,
                               showMultimedia: true,
                               bodyMaxLines: 5,
                               bodyTextOverflow: TextOverflow.ellipsis,
@@ -141,7 +142,13 @@ class _MyHomePageState extends State<HomeLinksPage> with SingleTickerProviderSta
     return Scaffold(
         appBar: AppBar(
             centerTitle: true,
-            title:Text("Pan Pocket")
+            title:Text("Pan Pocket"),
+          actions: !Platform.isAndroid ? <Widget>[
+            IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: onRefresh
+            ),
+          ] : null
         ),
         floatingActionButton: Container(
             decoration: BoxDecoration(

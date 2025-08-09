@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pan_pocket/controller/home_controller.dart';
+import 'package:pan_pocket/controller/rss_article_controller.dart';
 import 'package:pan_pocket/pages/home_page.dart';
 import 'package:pan_pocket/pages/login_page.dart';
 import 'package:pan_pocket/pages/splash_page.dart';
@@ -20,6 +21,7 @@ Future<void> main() async{
                                 anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpdHp2YXRsemh0cXZtbGlxbG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM2MDM3ODAsImV4cCI6MjA2OTE3OTc4MH0.q_dVD4w4oa8xZM99OwmMSV73a6WEBGKE9188m5Bt0n4',  );
   GetIt.I.registerSingleton<ApiController>(ApiController());
   GetIt.I.registerSingleton<HomeController>(HomeController());
+  GetIt.I.registerSingleton<RssArticleController>(RssArticleController());
   await SharedPreferencesHelper.init();
   runApp(const MyApp());
 }

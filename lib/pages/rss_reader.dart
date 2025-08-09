@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:pan_pocket/helpers/screen_helper.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
 import 'package:pan_pocket/pages/rss_article_page.dart';
 import 'package:rss_dart/dart_rss.dart';
@@ -20,6 +21,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   List<String> urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
   late Future<List<RssItem>> futureRssItems;
   List<RssItem> rssItems = [];
+  ScreenHelper screenHelper = ScreenHelper();
 
   @override
   void initState() {
@@ -73,15 +75,18 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
    // var url = SharedPreferencesHelper.getString("rssUrl") ?? "";
     List<RssItem> list = [];
     for(var url in urls){
-      var xmlFeed = await http.get(Uri.parse(url));
-      list.addAll(RssFeed.parse(xmlFeed.body).items);
+      try{
+        var xmlFeed = await http.get(Uri.parse(url));
+        var test = RssFeed.parse(xmlFeed.body);
+        list.addAll(RssFeed.parse(xmlFeed.body).items);
+      }catch(e){
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to parse: $url')),
+        );
+      }
+
     }
-
-    var fdfd = parseDateTime(list[0].pubDate!);
-   // var ddd = DateTime.parse(list[0].pubDate!);
-
     list.sort((a,b) => parseDateTime(b.pubDate!).compareTo(parseDateTime(a.pubDate!)));
-   // list.sort((a,b) => a.pubDate!.compareTo(b.pubDate!));
     return list;
   }
 
@@ -96,21 +101,19 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   }
 
   extractText(String description, String title){
+    description = cleanText(description);
     RegExp exp = new RegExp(r'<img[^>]*>');
     var ff = description.replaceAll(exp, "");
     ff = Bidi.stripHtmlIfNeeded(ff);
-    if(ff.startsWith(" ")){
-      ff = ff.replaceRange(0, 1, "");
-    }
+    ff = ff.trim();
     if(ff.startsWith(title)){
       ff = ff.replaceRange(0, title.length, "");
     }
-
-    int maxLength = 280;
-    if(description.length < 280){
-      maxLength = description.length;
+    var portrait = screenHelper.screenWidthMoreThanHeight(context);
+    int maxLength = portrait ? 280 : 140;
+    if(ff.length < maxLength){
+      maxLength = ff.length;
     }
-
     return ff.substring(0, maxLength);
   }
 
@@ -126,16 +129,18 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
         return ree;
       }
     }
-   return "https://hitzvatlzhtqvmliqlna.supabase.co/storage/v1/object/public/appfiles/ic_launcher.png";
+   return null;
   }
 
 
   getImageLink(RssItem item){
-
     if(item.media!.contents.length > 0){
-      var ff = Uri.tryParse(item.media!.contents.first.url!);
-      if(ff != null){
-        return item.media!.contents.first.url;
+
+      if(item.media!.contents.first.url != null){
+        var ff = Uri.tryParse(item.media!.contents.first.url!);
+        if(ff != null){
+          return item.media!.contents.first.url;
+        }
       }
     }
 
@@ -155,11 +160,16 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
       }
     }
 
+    if(item.enclosure != null){
+      return item.enclosure!.url.toString();
+    }
 
-    return "";
+
+    return null;
   }
 
   Future<void> refresh()async{
+    urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
     setState(() {
       futureRssItems = getFeedAsync();
     });
@@ -172,6 +182,21 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
 
     return item.description;
   }
+
+  getDomain(String url){
+    RegExp exp = RegExp(r'^(?:https?://)?(?:www\.)?([^/]+)');
+    if(exp.hasMatch(url)){
+      var domain = exp.firstMatch(url);
+      var fff = domain![1];
+      return fff;
+    }
+  }
+
+  cleanText(String text){
+    String val = 'â';
+    return text.replaceAll(val, "'").replaceAll('\n', '').trim();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -212,22 +237,31 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
                     ),
                     child: Column(
                       children: [
-                        Image.network(getImageLink(rssItems[index])),
+                        if(getImageLink(rssItems[index]) != null)Image.network(getImageLink(rssItems[index]), fit: BoxFit.cover),
                         ListTile(
-
-                          title: Text(rssItems[index].title!),
-                          subtitle: Text(extractText(rssItems[index].description!.replaceAll("\n", "").replaceAll("                        ", ""), rssItems[index].title!)),
+                          title: Text(cleanText(rssItems[index].title!)),
+                          subtitle: Text(extractText(rssItems[index].description!, rssItems[index].title!)),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(7.0),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
+                              Column(
+                                mainAxisAlignment:
+                                MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(getDomain(rssItems[index].link!), overflow: TextOverflow.clip, style: Theme.of(context).textTheme.bodySmall,),
+                                  Text(rssItems[index].pubDate!.substring(0, 16), overflow: TextOverflow.clip, style: Theme.of(context).textTheme.bodySmall,)
+                                ],
+                              ),
+                            Spacer(),
                             TextButton(
                               child: const Text('View'),
                               onPressed: () {
                                 Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText( rssItems[index]))),
+                                  MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText( rssItems[index]), urlText: rssItems[index].link!,)),
                                 );
 
 

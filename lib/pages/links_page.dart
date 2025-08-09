@@ -302,7 +302,7 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
                       padding: const EdgeInsets.all(8.0),
                       child: AnyLinkPreview(
                         link: linksList[index].Link!,
-                        displayDirection: UIDirection.uiDirectionHorizontal,
+                        displayDirection: UIDirection.uiDirectionVertical,
                         showMultimedia: true,
                         bodyMaxLines: 5,
                         bodyTextOverflow: TextOverflow.ellipsis,
