@@ -18,4 +18,13 @@ class SavedLinks {
       'archived': archived.toString()
     };
   }
+
+  Map<String, dynamic> toLocalDbJson() {
+    return {
+      'link_string': link_string,
+      'link_title': link_title,
+      'archived': archived,
+      'date_added': data_added.toString()
+    };
+  }
 }

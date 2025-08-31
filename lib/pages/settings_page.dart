@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:numberpicker/numberpicker.dart';
 import 'package:pan_pocket/helpers/screen_helper.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
+import 'package:pan_pocket/widgets/rss_link_category_modal.dart';
+import 'package:pan_pocket/widgets/rss_link_category_modal2.dart';
 import 'package:sizer/sizer.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -65,6 +67,12 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     SharedPreferencesHelper.setStringList('urlList', urlList);
   }
 
+  loadRssLinkModal(){
+    Navigator.push(context,
+      MaterialPageRoute(builder: (context) => RssLinkCategoryModal()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,12 +129,12 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                      width: 70.w,
                         child: Text(urlList[index], overflow: TextOverflow.ellipsis,maxLines: 1,)),
                     IconButton(onPressed:()=>{removeUrlFromList(urlList[index])}, icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.secondary, size:30),),
-
-
+                    IconButton(onPressed:loadRssLinkModal, icon: Icon(Icons.settings, color: Theme.of(context).colorScheme.secondary, size:30),),
                   ],
                 );
               }),
-            )
+            ),
+            RssLinkCategoryModal2()
           ],
         ),
       ),

@@ -6,6 +6,8 @@ import 'package:pan_pocket/main.dart';
 import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../helpers/shared_preferences_helper.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -22,6 +24,8 @@ class _LoginPageState extends State<LoginPage> {
   late final TextEditingController _passwordController = TextEditingController();
   ScreenHelper screenHelper = ScreenHelper();
   Future<void> _signIn() async {
+    SharedPreferencesHelper.setString("mode", "cloud");
+
     try {
       setState(() {
         _isLoading = true;
@@ -59,7 +63,16 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _localOnly()async{
+    SharedPreferencesHelper.setString("mode", "local");
+    _redirecting = true;
+    Navigator.of(context).pushReplacementNamed('/home');
+
+  }
+
   Future<void> _login()async{
+    SharedPreferencesHelper.setString("mode", "cloud");
+
     try {
       setState(() {
         _isLoading = true;
@@ -168,6 +181,10 @@ class _LoginPageState extends State<LoginPage> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _login,
                     child: Text(_isLoading ? 'Loading' : 'Login'),
+                  ),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _localOnly,
+                    child: Text(_isLoading ? 'Loading' : 'Local Only'),
                   ),
                 ],
               ),

@@ -1,5 +1,5 @@
 class Links {
-  final int? LinkId;
+  final String? LinkId;
   final String? Title;
   final String? Link;
   final String? Info;

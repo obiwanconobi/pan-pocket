@@ -72,11 +72,11 @@ class _MyHomePageState extends State<LinksPage> with SingleTickerProviderStateMi
     });
   }
 
-  deleteLink(int id)async{
+  deleteLink(String id)async{
     await controller.deleteLink(id);
   }
 
-  archiveLink(int id)async{
+  archiveLink(String id)async{
     await controller.archiveLink(id);
 
   }

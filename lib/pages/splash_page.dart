@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
 import 'package:pan_pocket/main.dart';
 
 
@@ -23,7 +24,8 @@ class _SplashPageState extends State<SplashPage> {
     }
 
     var session = supabase.auth.currentSession;
-    if (session != null) {
+    var mode = SharedPreferencesHelper.getString("mode") ?? "cloud";
+    if (session != null || mode == 'local') {
       Navigator.of(context).pushReplacementNamed('/home');
     } else {
       Navigator.of(context).pushReplacementNamed('/login');

@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:pan_pocket/controller/icontroller.dart';
 import 'package:pan_pocket/helpers/screen_helper.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
 import 'package:pan_pocket/pages/rss_article_page.dart';
@@ -9,6 +11,8 @@ import 'package:http/http.dart' as http;
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
+
+import '../controller/api_controller.dart';
 class RssReader extends StatefulWidget {
   const RssReader({super.key});
 
@@ -19,6 +23,8 @@ class RssReader extends StatefulWidget {
 class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   List<String> urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
+  var apiController = GetIt.instance<IController>(instanceName: SharedPreferencesHelper.getString("mode") ?? "cloud" );
+
   late Future<List<RssItem>> futureRssItems;
   List<RssItem> rssItems = [];
   ScreenHelper screenHelper = ScreenHelper();
@@ -73,6 +79,9 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
 
   Future<List<RssItem>> getFeedAsync()async{
    // var url = SharedPreferencesHelper.getString("rssUrl") ?? "";
+
+    var ffff = await apiController.getRssCategories();
+
     List<RssItem> list = [];
     for(var url in urls){
       try{
@@ -176,6 +185,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   }
   
   getHtmlText(RssItem item){
+    
     if(item.content != null){
       return item.content!.value;
     }
@@ -261,7 +271,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
                               child: const Text('View'),
                               onPressed: () {
                                 Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText( rssItems[index]), urlText: rssItems[index].link!,)),
+                                  MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText(rssItems[index]), urlText: rssItems[index].link!,)),
                                 );
 
 

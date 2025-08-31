@@ -48,6 +48,7 @@ dependencies:
   numberpicker: ^2.1.2
   rss_dart: ^1.0.13
   flutter_html: ^3.0.0
+  flutterdb: ^0.0.4
 
 dev_dependencies:
   flutter_test:
