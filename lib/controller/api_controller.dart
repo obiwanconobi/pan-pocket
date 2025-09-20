@@ -1,4 +1,5 @@
 import 'package:pan_pocket/controller/icontroller.dart';
+import 'package:pan_pocket/models/rss_category_links.dart';
 import 'package:pan_pocket/models/saved_links.dart';
 
 import '../main.dart';
@@ -58,6 +59,17 @@ class ApiController implements IController{
   getLinksCollection() {
     // TODO: implement getLinksCollection
     throw UnimplementedError();
+  }
+
+  @override
+  getCategoryLinks()async {
+    // TODO: implement getCategoryLinks
+    var result = await supabase.from('rss_category_links').select();
+    List<RssCategoryLinks> linkList = []; 
+    for(var r in result){
+      linkList.add(RssCategoryLinks(CategoryName: r["category_name"], LinkString: r["link_string"]));
+    }
+    return linkList;
   }
 
 }

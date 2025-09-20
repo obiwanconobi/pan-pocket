@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:pan_pocket/controller/icontroller.dart';
 import 'package:pan_pocket/helpers/screen_helper.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
+import 'package:pan_pocket/models/rss_category_links.dart';
 import 'package:pan_pocket/pages/rss_article_page.dart';
 import 'package:rss_dart/dart_rss.dart';
 import 'package:http/http.dart' as http;
@@ -79,13 +80,14 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
 
   Future<List<RssItem>> getFeedAsync()async{
    // var url = SharedPreferencesHelper.getString("rssUrl") ?? "";
+  List<RssCategoryLinks> linksList = await apiController.getCategoryLinks();
 
     var ffff = await apiController.getRssCategories();
 
     List<RssItem> list = [];
-    for(var url in urls){
+    for(var url in linksList){
       try{
-        var xmlFeed = await http.get(Uri.parse(url));
+        var xmlFeed = await http.get(Uri.parse(url.LinkString!));
         var test = RssFeed.parse(xmlFeed.body);
         list.addAll(RssFeed.parse(xmlFeed.body).items);
       }catch(e){

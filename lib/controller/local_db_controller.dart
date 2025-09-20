@@ -78,4 +78,10 @@ class LocalDbController implements IController{
         .insert(slJson);
   }
 
+  @override
+  getCategoryLinks() {
+    // TODO: implement getCategoryLinks
+    throw UnimplementedError();
+  }
+
 }

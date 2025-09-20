@@ -17,4 +17,7 @@ abstract class IController {
   getRssCategories();
 
   addRssCategory(Map<String, dynamic> slJson);
+
+  getCategoryLinks();
+
 }
