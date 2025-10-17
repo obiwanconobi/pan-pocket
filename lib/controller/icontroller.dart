@@ -20,4 +20,13 @@ abstract class IController {
 
   getCategoryLinks();
 
+  addRssCategoryRel(String link_id, String category_id);
+
+  addRssLink(String linkString);
+
+  rssLinksByCategory(String categorry_id);
+
+  archivedRssLink(String link_id);
+
+
 }

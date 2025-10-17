@@ -1,4 +1,5 @@
 import 'package:pan_pocket/controller/icontroller.dart';
+import 'package:pan_pocket/models/rss_categories.dart';
 import 'package:pan_pocket/models/rss_category_links.dart';
 import 'package:pan_pocket/models/saved_links.dart';
 
@@ -47,6 +48,7 @@ class ApiController implements IController{
     return await supabase.from('rss_categories')
         .select()
         .eq('archived', false);
+
   }
   @override
   addRssCategory(Map<String, dynamic> slJson)async{
@@ -70,6 +72,38 @@ class ApiController implements IController{
       linkList.add(RssCategoryLinks(CategoryName: r["category_name"], LinkString: r["link_string"]));
     }
     return linkList;
+  }
+
+  @override
+  addRssCategoryRel(String link_id, String category_id) async{
+    // TODO: implement addRssCategoryRel
+    var json = {
+      "link_id":link_id,
+      "category_id": category_id
+    };
+    await supabase.from("rss_categories_links_rel").insert(json);
+  }
+
+  @override
+  addRssLink(String linkString)async {
+    // TODO: implement addRssLink
+  var rssJson = {"link_string": linkString};
+    var ff = await supabase.from("rss_links").insert(rssJson).select("id");
+    return ff[0]["id"];
+  }
+
+  @override
+  rssLinksByCategory(String category_name) async{
+    // TODO: implement rssLinksByCategory
+
+    var data = await supabase.from('v_rss_links_by_category').select().eq('category_name', category_name).eq('archived', false);
+  return data;
+  }
+
+  @override
+  archivedRssLink(String link_id)async {
+    // TODO: implement archivedRssLink
+    await supabase.from("rss_links").update({"archived": true}).eq('id', link_id);
   }
 
 }

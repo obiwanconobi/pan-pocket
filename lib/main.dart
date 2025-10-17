@@ -8,6 +8,7 @@ import 'package:pan_pocket/controller/home_controller.dart';
 import 'package:pan_pocket/controller/icontroller.dart';
 import 'package:pan_pocket/controller/local_db_controller.dart';
 import 'package:pan_pocket/controller/rss_article_controller.dart';
+import 'package:pan_pocket/controller/settings_controller.dart';
 import 'package:pan_pocket/pages/home_page.dart';
 import 'package:pan_pocket/pages/login_page.dart';
 import 'package:pan_pocket/pages/splash_page.dart';
@@ -34,6 +35,7 @@ Future<void> main() async{
       instanceName: "local"
   );
 
+  GetIt.I.registerSingleton<SettingsController>(SettingsController());
   GetIt.I.registerSingleton<HomeController>(HomeController());
   GetIt.I.registerSingleton<RssArticleController>(RssArticleController());
   runApp(const MyApp());

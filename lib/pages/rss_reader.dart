@@ -1,11 +1,11 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:pan_pocket/controller/icontroller.dart';
 import 'package:pan_pocket/helpers/screen_helper.dart';
 import 'package:pan_pocket/helpers/shared_preferences_helper.dart';
+import 'package:pan_pocket/models/rss_categories.dart';
 import 'package:pan_pocket/models/rss_category_links.dart';
+import 'package:pan_pocket/models/rss_link.dart';
 import 'package:pan_pocket/pages/rss_article_page.dart';
 import 'package:rss_dart/dart_rss.dart';
 import 'package:http/http.dart' as http;
@@ -25,6 +25,8 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   late AnimationController _controller;
   List<String> urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
   var apiController = GetIt.instance<IController>(instanceName: SharedPreferencesHelper.getString("mode") ?? "cloud" );
+  var defaultCat = SharedPreferencesHelper.getString("defaultCat") ?? "General";
+  late Future<List<RssCategories>> futureCats;
 
   late Future<List<RssItem>> futureRssItems;
   List<RssItem> rssItems = [];
@@ -35,6 +37,37 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     super.initState();
     getFeed();
     _controller = AnimationController(vsync: this);
+    futureCats = getRssCategories();
+  }
+
+  Future<List<RssCategories>> getRssCategories()async{
+
+      apiController = GetIt.instance<IController>(instanceName: SharedPreferencesHelper.getString("mode") ?? "cloud" );
+      var data = await apiController.getRssCategories();
+      List<RssCategories> returnList = [];
+      for(var result in data){
+        var trttt = result["created_at"];
+
+        returnList.add(RssCategories(Id: result["id"], CreatedAt: DateTime.parse(result["created_at"]), UserId: result["user_id"], CategoryName: result["category_name"], Archived: result["archived"]));
+      }
+
+      return returnList;
+
+  }
+
+  getRssData(String? catName)async{
+    var data = [];
+    if(catName == null){
+       data = await apiController.rssLinksByCategory(defaultCat);
+    }else{
+       data = await apiController.rssLinksByCategory(catName);
+
+    }
+    List<RssLink> rssLinks = [];
+    for(var d in data){
+      rssLinks.add(RssLink(id: d["id"], createdAt: DateTime.parse(d["created_at"]), linkString: d["link_string"], archived: d["archived"] ));
+    }
+    return rssLinks;
   }
 
 
@@ -78,16 +111,23 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
         return parsedDate;
   }
 
-  Future<List<RssItem>> getFeedAsync()async{
+  Future<List<RssItem>> getFeedAsync(String? catName)async{
    // var url = SharedPreferencesHelper.getString("rssUrl") ?? "";
-  List<RssCategoryLinks> linksList = await apiController.getCategoryLinks();
+
+    List<RssLink> linksList = [];
+
+    if(catName == null){
+       linksList = await getRssData(defaultCat);
+    }else{
+      linksList = await getRssData(catName);
+    }
 
     var ffff = await apiController.getRssCategories();
 
     List<RssItem> list = [];
     for(var url in linksList){
       try{
-        var xmlFeed = await http.get(Uri.parse(url.LinkString!));
+        var xmlFeed = await http.get(Uri.parse(url.linkString!));
         var test = RssFeed.parse(xmlFeed.body);
         list.addAll(RssFeed.parse(xmlFeed.body).items);
       }catch(e){
@@ -102,7 +142,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   }
 
   getFeed()async{
-    futureRssItems = getFeedAsync();
+    futureRssItems = getFeedAsync(null);
   }
 
   @override
@@ -182,7 +222,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   Future<void> refresh()async{
     urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
     setState(() {
-      futureRssItems = getFeedAsync();
+      futureRssItems = getFeedAsync(null);
     });
   }
   
@@ -208,6 +248,12 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     String val = 'â';
     return text.replaceAll(val, "'").replaceAll('\n', '').trim();
   }
+  
+  changeData(String catName){
+    setState(() {
+      futureRssItems = getFeedAsync(catName);
+    });
+  }
 
 
   @override
@@ -216,86 +262,121 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
       appBar: AppBar(title: Text("RSS"), centerTitle: true,),
       body: RefreshIndicator(
         onRefresh: refresh,
-        child: FutureBuilder(
-          future: futureRssItems,
-            builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              //child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.hasError) {
-            return Column(
-              children: [
-                Center(
-                  child: Text('Error: No URL Specified'),
-                ),
-                TextButton(onPressed: refresh, child: Text('Refresh'))
-              ],
-            );
-          } else if (!snapshot.hasData) {
-            return Center(
-              child: Text('no_songs_error'),
-            );
-          } else {
-            rssItems = snapshot.data!;
-            return ListView.builder(
-                shrinkWrap: true,
-                itemCount: rssItems.length,
-                physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, index) {
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15.0),
-                    ),
-                    child: Column(
-                      children: [
-                        if(getImageLink(rssItems[index]) != null)Image.network(getImageLink(rssItems[index]), fit: BoxFit.cover),
-                        ListTile(
-                          title: Text(cleanText(rssItems[index].title!)),
-                          subtitle: Text(extractText(rssItems[index].description!, rssItems[index].title!)),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(7.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              FutureBuilder(
+                  future: futureCats,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                          child: Text('Offline')
+                      );
+                    }
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    var md = snapshot.data!;
+                    return SizedBox(
+                      height: 50,
+                      child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          shrinkWrap: true,
+                          itemCount: md.length,
+                          itemBuilder: (context, index){
+                            return Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: InkWell(
+                                onTap: ()=> {changeData(md[index]!.CategoryName!)},
+                                  child: Text(md[index]!.CategoryName!))
+                            );
+                          }),
+                    );
+                  }
+              ),
+              FutureBuilder(
+                future: futureRssItems,
+                  builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    //child: CircularProgressIndicator(),
+                  );
+                } else if (snapshot.hasError) {
+                  return Column(
+                    children: [
+                      Center(
+                        child: Text('Error: No URL Specified'),
+                      ),
+                      TextButton(onPressed: refresh, child: Text('Refresh'))
+                    ],
+                  );
+                } else if (!snapshot.hasData) {
+                  return Center(
+                    child: Text('no_songs_error'),
+                  );
+                } else {
+                  rssItems = snapshot.data!;
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: rssItems.length,
+                      physics: const BouncingScrollPhysics(),
+                      itemBuilder: (context, index) {
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: Column(
                             children: [
-                              Column(
-                                mainAxisAlignment:
-                                MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(getDomain(rssItems[index].link!), overflow: TextOverflow.clip, style: Theme.of(context).textTheme.bodySmall,),
-                                  Text(rssItems[index].pubDate!.substring(0, 16), overflow: TextOverflow.clip, style: Theme.of(context).textTheme.bodySmall,)
-                                ],
+                              if(getImageLink(rssItems[index]) != null)Image.network(getImageLink(rssItems[index]), fit: BoxFit.cover),
+                              ListTile(
+                                title: Text(cleanText(rssItems[index].title!)),
+                                subtitle: Text(extractText(rssItems[index].description!, rssItems[index].title!)),
                               ),
-                            Spacer(),
-                            TextButton(
-                              child: const Text('View'),
-                              onPressed: () {
-                                Navigator.push(context,
-                                  MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText(rssItems[index]), urlText: rssItems[index].link!,)),
-                                );
+                              Padding(
+                                padding: const EdgeInsets.all(7.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Column(
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(getDomain(rssItems[index].link!), overflow: TextOverflow.clip, style: Theme.of(context).textTheme.bodySmall,),
+                                        Text(rssItems[index].pubDate!.substring(0, 16), overflow: TextOverflow.clip, style: Theme.of(context).textTheme.bodySmall,)
+                                      ],
+                                    ),
+                                  Spacer(),
+                                  TextButton(
+                                    child: const Text('View'),
+                                    onPressed: () {
+                                      Navigator.push(context,
+                                        MaterialPageRoute(builder: (context) => RssArticlePage(htmlText: getHtmlText(rssItems[index]), urlText: rssItems[index].link!,)),
+                                      );
 
 
-                              },
-                            ),
-                            SizedBox(width: 2.w,),
-                            TextButton(
-                              child: const Text('Visit'),
-                              onPressed: () {
-                                launchUrl(Uri.parse(rssItems[index].link!));
-                                /* ... */
-                              },
-                            ),
-                          ],),
-                        )
-                      ],
-                    ),
+                                    },
+                                  ),
+                                  SizedBox(width: 2.w,),
+                                  TextButton(
+                                    child: const Text('Visit'),
+                                    onPressed: () {
+                                      launchUrl(Uri.parse(rssItems[index].link!));
+                                      /* ... */
+                                    },
+                                  ),
+                                ],),
+                              )
+                            ],
+                          ),
+                        );
+                      }
                   );
                 }
-            );
-          }
-        }),
+              }),
+            ],
+          ),
+        ),
       ),
     );
   }

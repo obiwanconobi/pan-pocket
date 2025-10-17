@@ -84,4 +84,28 @@ class LocalDbController implements IController{
     throw UnimplementedError();
   }
 
+  @override
+  addRssCategoryRel(String link_id, String category_id) {
+    // TODO: implement addRssCategoryRel
+    throw UnimplementedError();
+  }
+
+  @override
+  addRssLink(String linkString) {
+    // TODO: implement addRssLink
+    throw UnimplementedError();
+  }
+
+  @override
+  rssLinksByCategory(String categorry_id) {
+    // TODO: implement rssLinksByCategory
+    throw UnimplementedError();
+  }
+
+  @override
+  archivedRssLink(String link_id) {
+    // TODO: implement archivedRssLink
+    throw UnimplementedError();
+  }
+
 }
