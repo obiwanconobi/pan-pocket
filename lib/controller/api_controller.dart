@@ -77,9 +77,11 @@ class ApiController implements IController{
   @override
   addRssCategoryRel(String link_id, String category_id) async{
     // TODO: implement addRssCategoryRel
+    var catId = await supabase.from('rss_categories').select().eq('category_name', category_id);
+
     var json = {
       "link_id":link_id,
-      "category_id": category_id
+      "category_id": catId.first["id"]
     };
     await supabase.from("rss_categories_links_rel").insert(json);
   }
