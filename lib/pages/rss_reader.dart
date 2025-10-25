@@ -29,10 +29,14 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   var defaultCat = SharedPreferencesHelper.getString("defaultCat") ?? "General";
   String? currentCat = null;
   late Future<List<RssCategories>> futureCats;
-
   late Future<List<RssItem>> futureRssItems;
   List<RssItem> rssItems = [];
+  List<RssItem> fullRssItems = [];
+
   List<SidebarXItem> sideBarItems = [];
+
+  var currentLinks = Map<String, String>();
+
   ScreenHelper screenHelper = ScreenHelper();
   final SidebarXController sidebarXController = SidebarXController(selectedIndex: 0, extended: true);
 
@@ -44,11 +48,6 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     getFeed();
     _controller = AnimationController(vsync: this);
     futureCats = getRssCategories();
-
-    
-    sidebarXController.addListener(() => {
-
-    });
 
 
   }
@@ -66,7 +65,6 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
         count++;
         returnList.add(RssCategories(Id: result["id"], CreatedAt: DateTime.parse(result["created_at"]), UserId: result["user_id"], CategoryName: result["category_name"], Archived: result["archived"]));
       }
-
       return returnList;
 
   }
@@ -81,26 +79,22 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
 
     }else{
       var count = cc;
-      var linksString = sideBarItems[count].label;
-
-      Iterable<RssItem> newItems =  rssItems.where((x) => x.categories.isNotEmpty && x.categories.first.value?.trim().toLowerCase() == linksString?.trim().toLowerCase());
+      var linksStringName = sideBarItems[count].label;
+      var linksString = currentLinks[linksStringName];
+      List<RssItem> newItems =  fullRssItems.where((x) => x.categories.isNotEmpty && x.categories.first.value?.trim().toLowerCase() == linksString?.trim().toLowerCase()).toList();
 
       List<RssItem> focusList = [];
       for(var rssItem in rssItems){
         if(rssItem.categories.first.value == linksString){
           //focusList.add(rssItem);
         }else{
-          setState(() {
             focusList.add(rssItem);
-          });
         }
       }
 
 
       setState(() {
-        for(var rssItem in focusList){
-          rssItems.remove(rssItem);
-        }
+        futureRssItems = focusDataItems(newItems);
       });
     }
 
@@ -119,15 +113,21 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     List<RssLink> rssLinks = [];
     sideBarItems.clear();
     sideBarItems.add(SidebarXItem(icon: Icons.newspaper,label: "All", onTap:(){focusData(0);}));
-
+    currentLinks.clear();
     var count = 1;
     for(var d in data){
       var ffD = count;
-      sideBarItems.add(SidebarXItem(icon: Icons.newspaper,label: d["link_string"],onTap:(){focusData(ffD);}));
+      var linkString = d["link_string"].toString().replaceAll("https://", "").replaceAll("http://", "").replaceAll("www.", "");
+      currentLinks[linkString] = d["link_string"];
+      sideBarItems.add(SidebarXItem(icon: Icons.newspaper,label: linkString,onTap:(){focusData(ffD);}));
       count++;
       rssLinks.add(RssLink(id: d["id"], createdAt: DateTime.parse(d["created_at"]), linkString: d["link_string"], archived: d["archived"] ));
     }
     return rssLinks;
+  }
+
+  Future<List<RssItem>> focusDataItems(List<RssItem> items)async{
+      return items;
   }
 
 
@@ -209,6 +209,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
 
     }
     list.sort((a,b) => parseDateTime(b.pubDate!).compareTo(parseDateTime(a.pubDate!)));
+    fullRssItems = list;
     return list;
   }
 
@@ -332,7 +333,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     return Scaffold(
       appBar: AppBar(title: Text("RSS"), centerTitle: true,),
       drawer: SidebarX(
-        extendedTheme: SidebarXTheme(width: 180),
+        extendedTheme: SidebarXTheme(width: 180, textStyle: Theme.of(context).textTheme.bodyMedium, decoration: BoxDecoration(color: Theme.of(context).canvasColor)),
         controller: sidebarXController,
         items: sideBarItems
       ),
@@ -392,6 +393,7 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
                   );
                 } else {
                   rssItems = snapshot.data!;
+                  //fullRssItems = rssItems;
                   return ListView.builder(
                       shrinkWrap: true,
                       itemCount: rssItems.length,
