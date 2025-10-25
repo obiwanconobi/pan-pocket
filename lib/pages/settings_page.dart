@@ -27,8 +27,10 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   //List<String> urlList = SharedPreferencesHelper.getStringList("urlList") ?? [];
   var defaultCat = SharedPreferencesHelper.getString("defaultCat") ?? "General";
   late Future<List<RssCategories>> futureCats;
+  List<RssCategories> catList = [];
   String currentCategory = "General";
   late Future<List<RssLink>> futureLinks;
+  TextEditingController categoryNameController = TextEditingController();
   List<RssLink> urlList = [];
   @override
   void initState(){
@@ -53,6 +55,15 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   //  perfs = await SharedPreferences.getInstance();
 
   }
+
+  saveCategory()async{
+    var catId = await controller.saveCategory(categoryNameController.text);
+    setState(() {
+      //futureCats =  controller.getRssCategories();
+      catList.add(RssCategories(Id: catId, CategoryName: categoryNameController.text, Archived:false));
+    });
+  }
+
 
   @override
   void dispose() {
@@ -150,37 +161,45 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
                 )
               ],
             ),
-            FutureBuilder(
-                future: futureCats,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                        child: Text('Offline')
-                    );
-                  }
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  var md = snapshot.data!;
-                  return SizedBox(
-                    height: 200,
-                    child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        shrinkWrap: true,
-                        itemCount: md.length,
-                        itemBuilder: (context, index){
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: InkWell(
-                                onTap: () => {setCurrentCategory(md[index].CategoryName!)},
-                                child: Text(md[index]!.CategoryName!)),
-                          );
-                        }),
-                  );
-                }
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FutureBuilder(
+                    future: futureCats,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                            child: Text('Offline')
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      catList = snapshot.data!;
+                      return SizedBox(
+                        height: 50,
+                        child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            itemCount: catList.length,
+                            itemBuilder: (context, index){
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: InkWell(
+                                    onTap: () => {setCurrentCategory(catList[index].CategoryName!)},
+                                    child: Text(catList[index]!.CategoryName!)),
+                              );
+                            }),
+                      );
+                    }
+                ),
+                IconButton(onPressed: () => _dialogBuilder(context), icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary, size:30),),
+
+              ],
             ),
             TextField(controller: rssUrlController,),
             TextButton(child: Text('Save'), onPressed: saveUrl,),
+            Text(currentCategory),
             FutureBuilder(
               future: futureLinks,
               builder: (context, snapshot){
@@ -219,4 +238,44 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
       ),
     ),);
   }
-}
+
+  Future<void> _dialogBuilder(BuildContext context) {
+    return showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Add New Category'),
+            content: const Text(
+              'Add a new category for storing\n'
+                  'RSS Links\n'
+            ),
+            actions: <Widget>[
+              TextField(decoration: InputDecoration(labelText: "Category Name", labelStyle: Theme.of(context).textTheme.bodyMedium),controller: categoryNameController,),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    style: TextButton.styleFrom(textStyle: Theme.of(context).textTheme.labelLarge),
+                    child: const Text('Save'),
+                    onPressed: () {
+                      saveCategory();
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(textStyle: Theme.of(context).textTheme.labelLarge),
+                    child: const Text('Close'),
+                    onPressed: () {
+
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+
+            ],
+          );
+        });
+
+    }
+  }

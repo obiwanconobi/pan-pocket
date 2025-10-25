@@ -22,6 +22,15 @@ class SettingsController{
     return returnList;
   }
 
+  saveCategory(String categoryName)async{
+    var slJson =  {
+      'category_name': categoryName,
+      'archived': false,
+    };
+    var result = await apiController.addRssCategory(slJson);
+    return result;
+  }
+
   saveLinkAndGetId(String linkString)async{
     return await apiController.addRssLink(linkString);
   }

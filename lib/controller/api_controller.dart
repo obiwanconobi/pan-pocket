@@ -52,9 +52,15 @@ class ApiController implements IController{
   }
   @override
   addRssCategory(Map<String, dynamic> slJson)async{
-    await supabase
-        .from('rss_categories')
-        .insert(slJson);
+
+    List<Map<String, dynamic>> data = [];
+
+    data = await supabase
+          .from('rss_categories')
+          .insert(slJson)
+          .select();
+
+    return data[0]["id"];
   }
 
   @override
