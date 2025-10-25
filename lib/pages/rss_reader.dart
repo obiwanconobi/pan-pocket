@@ -9,6 +9,7 @@ import 'package:pan_pocket/models/rss_link.dart';
 import 'package:pan_pocket/pages/rss_article_page.dart';
 import 'package:rss_dart/dart_rss.dart';
 import 'package:http/http.dart' as http;
+import 'package:sidebarx/sidebarx.dart';
 import 'package:sizer/sizer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
@@ -26,11 +27,16 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   List<String> urls = SharedPreferencesHelper.getStringList('urlList') ?? [];
   var apiController = GetIt.instance<IController>(instanceName: SharedPreferencesHelper.getString("mode") ?? "cloud" );
   var defaultCat = SharedPreferencesHelper.getString("defaultCat") ?? "General";
+  String? currentCat = null;
   late Future<List<RssCategories>> futureCats;
 
   late Future<List<RssItem>> futureRssItems;
   List<RssItem> rssItems = [];
+  List<SidebarXItem> sideBarItems = [];
   ScreenHelper screenHelper = ScreenHelper();
+  final SidebarXController sidebarXController = SidebarXController(selectedIndex: 0, extended: true);
+
+
 
   @override
   void initState() {
@@ -38,6 +44,13 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
     getFeed();
     _controller = AnimationController(vsync: this);
     futureCats = getRssCategories();
+
+    
+    sidebarXController.addListener(() => {
+
+    });
+
+
   }
 
   Future<List<RssCategories>> getRssCategories()async{
@@ -45,13 +58,52 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
       apiController = GetIt.instance<IController>(instanceName: SharedPreferencesHelper.getString("mode") ?? "cloud" );
       var data = await apiController.getRssCategories();
       List<RssCategories> returnList = [];
+      int count = 1;
       for(var result in data){
         var trttt = result["created_at"];
-
+        var ff = count;
+       // sideBarItems.add(SidebarXItem(icon: Icons.newspaper,label: result["category_name"],onTap:(){focusData(ff);}));
+        count++;
         returnList.add(RssCategories(Id: result["id"], CreatedAt: DateTime.parse(result["created_at"]), UserId: result["user_id"], CategoryName: result["category_name"], Archived: result["archived"]));
       }
 
       return returnList;
+
+  }
+
+  focusData(int cc){
+
+    if(cc == 0){
+      setState(() {
+        rssItems.clear();
+        futureRssItems = getFeedAsync(currentCat ?? defaultCat);
+      });
+
+    }else{
+      var count = cc;
+      var linksString = sideBarItems[count].label;
+
+      Iterable<RssItem> newItems =  rssItems.where((x) => x.categories.isNotEmpty && x.categories.first.value?.trim().toLowerCase() == linksString?.trim().toLowerCase());
+
+      List<RssItem> focusList = [];
+      for(var rssItem in rssItems){
+        if(rssItem.categories.first.value == linksString){
+          //focusList.add(rssItem);
+        }else{
+          setState(() {
+            focusList.add(rssItem);
+          });
+        }
+      }
+
+
+      setState(() {
+        for(var rssItem in focusList){
+          rssItems.remove(rssItem);
+        }
+      });
+    }
+
 
   }
 
@@ -63,8 +115,16 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
        data = await apiController.rssLinksByCategory(catName);
 
     }
+
     List<RssLink> rssLinks = [];
+    sideBarItems.clear();
+    sideBarItems.add(SidebarXItem(icon: Icons.newspaper,label: "All", onTap:(){focusData(0);}));
+
+    var count = 1;
     for(var d in data){
+      var ffD = count;
+      sideBarItems.add(SidebarXItem(icon: Icons.newspaper,label: d["link_string"],onTap:(){focusData(ffD);}));
+      count++;
       rssLinks.add(RssLink(id: d["id"], createdAt: DateTime.parse(d["created_at"]), linkString: d["link_string"], archived: d["archived"] ));
     }
     return rssLinks;
@@ -129,7 +189,18 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
       try{
         var xmlFeed = await http.get(Uri.parse(url.linkString!));
         var test = RssFeed.parse(xmlFeed.body);
-        list.addAll(RssFeed.parse(xmlFeed.body).items);
+        var rssCategory = RssCategory(url.linkString, url.linkString);
+        List<RssCategory> rssCategoryList =  [rssCategory];
+        List<RssItem> rssItemsList = [];
+        var rssFeedItems = test.items;
+        for(var rfs in rssFeedItems){
+          var ff = RssItem(source: rfs.source, title: rfs.title, description: rfs.description, link: rfs.link, pubDate: rfs.pubDate, content:  rfs.content, author: rfs.author, media: rfs.media, enclosure: rfs.enclosure,
+            categories: rssCategoryList
+          );
+          rssItemsList.add(ff);
+        }
+
+        list.addAll(rssItemsList);
       }catch(e){
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to parse: $url')),
@@ -250,16 +321,21 @@ class _RssReaderState extends State<RssReader> with SingleTickerProviderStateMix
   }
   
   changeData(String catName){
+    currentCat = catName;
     setState(() {
       futureRssItems = getFeedAsync(catName);
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("RSS"), centerTitle: true,),
+      drawer: SidebarX(
+        extendedTheme: SidebarXTheme(width: 180),
+        controller: sidebarXController,
+        items: sideBarItems
+      ),
       body: RefreshIndicator(
         onRefresh: refresh,
         child: SingleChildScrollView(

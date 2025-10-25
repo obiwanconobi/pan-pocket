@@ -80,6 +80,7 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
     controller.saveCategoryLinkRel(linkId.toString(), currentCategory.toString());
 
     setState(() {
+      urlList.add(RssLink(linkString: rssUrlController.text));
      // urlList.add(rssUrlController.text);
     });
 
@@ -87,10 +88,11 @@ class _SettingsPageState extends State<SettingsPage> with SingleTickerProviderSt
   }
 
   removeUrlFromList(int id){
+    var item = urlList.where((obj) => obj.id == id).first;
     setState(() {
-   //   urlList.remove(url);
-      controller.setLinkToArchived(id.toString());
+      urlList.remove(item);
     });
+    controller.setLinkToArchived(id.toString());
    // SharedPreferencesHelper.setStringList('urlList', urlList);
   }
 
